@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sound Map</title>
+
+    <script src='https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js'></script>
+    <link href='https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css' rel='stylesheet' />
+
+</head>
+
+<body>
+    <button id="toggle" style="position: absolute; left: 20px; top: 20px; z-index: 100;" type="button">
+        Play / Pause
+    </button>
+    <div id='map' style='width: 100%; height: 100vh'></div>
+    <script>
+        var map = new maplibregl.Map({
+            container: 'map',
+            style: 'https://gtitov.github.io/vector-tiles/styles/ne_10m_land.json', // stylesheet location
+            center: [-74.5, 40], // starting position [lng, lat]
+            zoom: 2, // starting zoom
+        });
+        map.on('load', function () {
+            const audioContext = new AudioContext();
+            // background
+            const oscillator = audioContext.createOscillator();
+            oscillator.type = "triangle";
+            oscillator.frequency.value = 20 * map.getZoom() + 100;
+            // const gainNode = audioContext.createGain();
+            // oscillator.connect(gainNode);
+            oscillator.connect(audioContext.destination);
+            oscillator.start();
+
+            map.on('zoom', function () {
+                console.log(oscillator.context.state);
+                oscillator.frequency.value = 20 * map.getZoom() + 100;
+
+            });
+
+            document.getElementById("toggle").addEventListener("click", function () { audioContext.state === "running" ? audioContext.suspend() : audioContext.resume() })
+
+            // beep on click
+            const beepContext = new AudioContext();
+
+            map.on('mousedown', function () {
+                const beep = beepContext.createOscillator();
+                beep.type = "sawtouth";
+                beep.frequency.value = 400
+                beep.connect(beepContext.destination);
+                beep.start()
+                map.on('mouseup', function () {
+                    beep.stop()
+                });
+            });
+
+
+        })
+
+
+    </script>
+
+</body>
+
+</html>
