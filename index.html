@@ -13,54 +13,65 @@
 </head>
 
 <body>
-    <button id="toggle" style="position: absolute; left: 20px; top: 20px; z-index: 100;" type="button">
+    <button id="start" style="position: absolute; left: 20px; top: 20px; z-index: 100;" type="button">
+        Start
+    </button>
+    <button id="toggle" style="position: absolute; left: 20px; top: 60px; z-index: 100;" type="button">
         Play / Pause
     </button>
     <div id='map' style='width: 100%; height: 100vh'></div>
     <script>
-        var map = new maplibregl.Map({
-            container: 'map',
-            style: 'https://gtitov.github.io/vector-tiles/styles/ne_10m_land.json', // stylesheet location
-            center: [-74.5, 40], // starting position [lng, lat]
-            zoom: 2, // starting zoom
-        });
-        map.on('load', function () {
-            const audioContext = new AudioContext();
-            // background
-            const oscillator = audioContext.createOscillator();
-            oscillator.type = "triangle";
-            oscillator.frequency.value = 20 * map.getZoom() + 100;
-            const oscillatorGain = audioContext.createGain();
-            oscillatorGain.gain.value = 0.5
-            oscillator.connect(oscillatorGain).connect(audioContext.destination);
-            oscillator.start();
+        document.getElementById("start").addEventListener("click", function () {
+            document.getElementById("start").style.display = "none"
 
-            map.on('zoom', function () {
-                console.log(oscillator.context.state);
+            var map = new maplibregl.Map({
+                container: 'map',
+                style: 'https://gtitov.github.io/vector-tiles/styles/ne_10m_land.json', // stylesheet location
+                center: [-74.5, 40], // starting position [lng, lat]
+                zoom: 2, // starting zoom
+            });
+            map.on('load', function () {
+                const audioContext = new AudioContext();
+                // background
+                const oscillator = audioContext.createOscillator();
+                oscillator.type = "triangle";
                 oscillator.frequency.value = 20 * map.getZoom() + 100;
+                const oscillatorGain = audioContext.createGain();
+                oscillatorGain.gain.value = 0.5
+                oscillator.connect(oscillatorGain).connect(audioContext.destination);
+                oscillator.start();
 
-            });
+                document.getElementById("toggle").addEventListener("click", function () {
+                    audioContext.state === "running" ? audioContext.suspend() : audioContext.resume()
+                })
 
-            document.getElementById("toggle").addEventListener("click", function () { audioContext.state === "running" ? audioContext.suspend() : audioContext.resume() })
-
-            // beep on click
-            const beepContext = new AudioContext();
-
-            map.on('click', function (e) {
-                const dlon = e.lngLat.lng - 37
-                const dlat = e.lngLat.lat - 55
-                const distance = Math.sqrt(dlon**2 + dlat**2)
-                console.log(dlon**2, dlat**2, distance)
-                const beep = beepContext.createOscillator();
-                beep.frequency.value = 800 - distance
-                beep.type = "square";
-                beep.connect(beepContext.destination);
-                beep.start()
-                beep.stop(audioContext.currentTime + 0.1)
-            });
+                map.on('zoom', function () {
+                    console.log(oscillator.context.state);
+                    oscillator.frequency.value = 20 * map.getZoom() + 100;
+                });
 
 
+
+
+                const beepContext = new AudioContext();
+                map.on('click', function (e) {
+                    // beep on click
+
+                    const dlon = e.lngLat.lng - 37
+                    const dlat = e.lngLat.lat - 55
+                    const distance = Math.sqrt(dlon ** 2 + dlat ** 2)
+                    console.log(dlon ** 2, dlat ** 2, distance)
+                    const beep = beepContext.createOscillator();
+                    beep.frequency.value = 500 - distance
+                    beep.type = "square";
+                    beep.connect(beepContext.destination);
+                    beep.start()
+                    beep.stop(beepContext.currentTime + 0.2)
+                })
+
+            })
         })
+
 
 
     </script>
