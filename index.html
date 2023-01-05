@@ -30,9 +30,9 @@
             const oscillator = audioContext.createOscillator();
             oscillator.type = "triangle";
             oscillator.frequency.value = 20 * map.getZoom() + 100;
-            // const gainNode = audioContext.createGain();
-            // oscillator.connect(gainNode);
-            oscillator.connect(audioContext.destination);
+            const oscillatorGain = audioContext.createGain();
+            oscillatorGain.gain.value = 0.5
+            oscillator.connect(oscillatorGain).connect(audioContext.destination);
             oscillator.start();
 
             map.on('zoom', function () {
@@ -46,15 +46,17 @@
             // beep on click
             const beepContext = new AudioContext();
 
-            map.on('mousedown', function () {
+            map.on('click', function (e) {
+                const dlon = e.lngLat.lng - 37
+                const dlat = e.lngLat.lat - 55
+                const distance = Math.sqrt(dlon**2 + dlat**2)
+                console.log(dlon**2, dlat**2, distance)
                 const beep = beepContext.createOscillator();
-                beep.type = "sawtouth";
-                beep.frequency.value = 400
+                beep.frequency.value = 800 - distance
+                beep.type = "square";
                 beep.connect(beepContext.destination);
                 beep.start()
-                map.on('mouseup', function () {
-                    beep.stop()
-                });
+                beep.stop(audioContext.currentTime + 0.1)
             });
 
 
